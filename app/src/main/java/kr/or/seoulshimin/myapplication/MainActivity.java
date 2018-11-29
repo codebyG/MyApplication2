@@ -3,11 +3,14 @@ package kr.or.seoulshimin.myapplication;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.WindowManager;
+import android.webkit.CookieManager;
+import android.webkit.CookieSyncManager;
 import android.webkit.JsResult;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -53,6 +56,10 @@ public class MainActivity extends AppCompatActivity {
                 return super.onJsAlert(view, url, message, result);
             }
         });
+        //캐시 삭제
+        web.clearCache(true);
+        web.clearHistory();
+
         //자바스크립트 허용
         web.getSettings().setJavaScriptEnabled(true);
         //헤더 SSCWS 기입 native 확인시 사용
@@ -61,10 +68,28 @@ public class MainActivity extends AppCompatActivity {
                         + " "
                         + getString(R.string.user_agent_suffix)
         );
-        web.setWebViewClient(new WebViewClient());
+
+        //YTPlayer 실행 시 반드시 필요
+        WebSettings settings = web.getSettings();
+        settings.setDomStorageEnabled(true);
+
+        //쿠키 동기화
+        web.setWebViewClient(new WebViewClient(){
+
+                @Override
+                public void onPageFinished(WebView view, String url) {
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                        CookieSyncManager.getInstance().sync();
+                    } else {
+                        CookieManager.getInstance().flush();
+                    }
+                }
+            }
+        );
+
         web.getSettings().setBuiltInZoomControls(true);
         web.getSettings().setSupportZoom(true);
-        web.loadUrl("https://seoulshimin.or.kr");
+        web.loadUrl("http://seoulshimin.or.kr/");
     }
     //뒤로가기 시 이전페이지
     public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -74,6 +99,8 @@ public class MainActivity extends AppCompatActivity {
         }
         return super.onKeyDown(keyCode, event);
     }
+
+
 
 
 
